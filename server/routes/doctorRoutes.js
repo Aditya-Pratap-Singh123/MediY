@@ -1,14 +1,17 @@
+
 const express = require("express");
 
 const {
     createDoctorProfile,
     getDoctorProfile,
     updateDoctorProfile,
+    uploadDoctorPhoto,
     getAllDoctors,
     getDoctorById
 } = require("../controllers/doctorController");
 
 const protect = require("../middleware/authMiddleware");
+const upload = require("../middleware/uploadMiddleware");
 
 const router = express.Router();
 
@@ -24,12 +27,14 @@ router.get(
 
 
 // =====================================
-// PUBLIC - GET SINGLE DOCTOR
+// PROTECTED - UPLOAD DOCTOR PHOTO
 // =====================================
 
-router.get(
-    "/:id",
-    getDoctorById
+router.put(
+    "/profile/photo",
+    protect,
+    upload.single("profileImage"),
+    uploadDoctorPhoto
 );
 
 
@@ -63,6 +68,16 @@ router.put(
     "/profile",
     protect,
     updateDoctorProfile
+);
+
+
+// =====================================
+// PUBLIC - GET SINGLE DOCTOR
+// =====================================
+
+router.get(
+    "/:id",
+    getDoctorById
 );
 
 

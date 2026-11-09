@@ -228,17 +228,20 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
     try {
+        const { email, password, role } = req.body;
 
-        const { email, password } = req.body;
-
-        // Check required fields
-        if (!email || !password) {
+        if (!email || !password || !role) {
             return res.status(400).json({
-                message: "Email and password are required"
+                message: "Email, password and account type are required"
             });
         }
 
-        // Find user
+        if (!["patient", "doctor"].includes(role)) {
+            return res.status(400).json({
+                message: "Invalid account type"
+            });
+        }
+
         const user = await User.findOne({
             email: email.toLowerCase()
         });
@@ -249,7 +252,6 @@ const loginUser = async (req, res) => {
             });
         }
 
-        // Compare password
         const isPasswordCorrect = await bcrypt.compare(
             password,
             user.password
@@ -261,7 +263,13 @@ const loginUser = async (req, res) => {
             });
         }
 
-        // Create JWT token
+        // Verify selected role against actual database role
+        if (user.role !== role) {
+            return res.status(403).json({
+                message: `This account is registered as ${user.role}. Please select ${user.role} login.`
+            });
+        }
+
         const token = jwt.sign(
             {
                 id: user._id,
@@ -273,12 +281,9 @@ const loginUser = async (req, res) => {
             }
         );
 
-        // Response
-        res.status(200).json({
+        return res.status(200).json({
             message: "Login successful",
-
             token,
-
             user: {
                 id: user._id,
                 name: user.name,
@@ -289,10 +294,9 @@ const loginUser = async (req, res) => {
         });
 
     } catch (error) {
-
         console.error("Login Error:", error);
 
-        res.status(500).json({
+        return res.status(500).json({
             message: "Server error",
             error: error.message
         });

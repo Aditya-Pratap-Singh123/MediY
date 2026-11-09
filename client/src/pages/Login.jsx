@@ -1,12 +1,28 @@
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import {
+    HeartPulse,
+    Stethoscope,
+    UserRound,
+    Mail,
+    LockKeyhole,
+    Eye,
+    EyeOff,
+    ArrowLeft,
+    ArrowRight,
+    ShieldCheck,
+    Activity
+} from "lucide-react";
 
 function Login() {
     const navigate = useNavigate();
+    const location = useLocation();
 
     const [role, setRole] = useState("patient");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -25,8 +41,9 @@ function Login() {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        email,
+                        email: email.trim(),
                         password,
+                        role
                     }),
                 }
             );
@@ -37,21 +54,25 @@ function Login() {
                 throw new Error(data.message || "Login failed");
             }
 
-            // Save token
-            localStorage.setItem("token", data.token);
-
-            // Save user information
-            if (data.user) {
-                localStorage.setItem("user", JSON.stringify(data.user));
+            // Confirm backend role before storing login session
+            if (!data.user || data.user.role !== role) {
+                throw new Error("Account type verification failed.");
             }
 
-            // Check role from backend
-            const loggedInRole = data.user?.role || role;
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("user", JSON.stringify(data.user));
 
-            if (loggedInRole === "doctor") {
-                navigate("/doctor/dashboard");
+            const redirectTo = location.state?.from;
+
+            if (redirectTo && role === "patient") {
+                navigate(redirectTo, { replace: true });
+                return;
+            }
+
+            if (role === "doctor") {
+                navigate("/doctor/dashboard", { replace: true });
             } else {
-                navigate("/patient/dashboard");
+                navigate("/patient/dashboard", { replace: true });
             }
 
         } catch (error) {
@@ -63,312 +84,249 @@ function Login() {
     };
 
     return (
-        <div style={styles.page}>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-sky-50 flex flex-col">
+            <nav className="w-full bg-white/90 backdrop-blur-xl border-b border-blue-100">
+                <div className="max-w-7xl mx-auto px-5 lg:px-8 h-20 flex items-center justify-between">
+                    <Link to="/" className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
+                            <HeartPulse size={25} className="text-white" />
+                        </div>
+                        <span className="text-2xl font-extrabold text-slate-900">
+                            Medi<span className="text-blue-600">Y</span>
+                        </span>
+                    </Link>
 
-            <div style={styles.card}>
-
-                {/* Logo */}
-                <div style={styles.logo}>
-                    🩺
+                    <Link to="/" className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-blue-600 transition">
+                        <ArrowLeft size={17} />
+                        Back to Home
+                    </Link>
                 </div>
+            </nav>
 
-                <h1 style={styles.title}>Welcome to MediY</h1>
+            <main className="flex-1 flex items-center justify-center px-5 py-12">
+                <div className="w-full max-w-6xl grid lg:grid-cols-2 bg-white rounded-[2rem] shadow-2xl shadow-blue-100/70 border border-blue-100 overflow-hidden">
 
-                <p style={styles.subtitle}>
-                    Login to continue to your portal
-                </p>
+                    <div className="hidden lg:flex relative bg-gradient-to-br from-blue-700 via-blue-600 to-sky-500 p-12 flex-col justify-between overflow-hidden">
+                        <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full border-[45px] border-white/10" />
+                        <div className="absolute -bottom-32 -left-20 w-80 h-80 rounded-full bg-white/5" />
 
-                {/* Role Selection */}
-                <div style={styles.roleContainer}>
+                        <div className="relative z-10">
+                            <div className="w-16 h-16 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center">
+                                <HeartPulse size={35} className="text-white" />
+                            </div>
 
-                    <button
-                        type="button"
-                        onClick={() => setRole("patient")}
-                        style={{
-                            ...styles.roleButton,
-                            ...(role === "patient"
-                                ? styles.activeRole
-                                : {}),
-                        }}
-                    >
-                        <span style={styles.roleIcon}>👤</span>
-                        <span>Login as Patient</span>
-                    </button>
+                            <p className="text-blue-100 font-semibold tracking-widest text-sm mt-12">
+                                WELCOME TO MEDIY
+                            </p>
 
-                    <button
-                        type="button"
-                        onClick={() => setRole("doctor")}
-                        style={{
-                            ...styles.roleButton,
-                            ...(role === "doctor"
-                                ? styles.activeDoctorRole
-                                : {}),
-                        }}
-                    >
-                        <span style={styles.roleIcon}>👨‍⚕️</span>
-                        <span>Login as Doctor</span>
-                    </button>
+                            <h1 className="text-5xl font-extrabold text-white leading-tight mt-4">
+                                Your health,
+                                <br />
+                                our priority.
+                            </h1>
 
+                            <p className="text-blue-100 leading-relaxed mt-6 max-w-md">
+                                Access your healthcare portal, connect with trusted doctors and manage your appointments with ease.
+                            </p>
+                        </div>
+
+                        <div className="relative z-10 space-y-5">
+                            <div className="flex items-center gap-4 bg-white/10 border border-white/15 rounded-2xl p-4">
+                                <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center">
+                                    <Stethoscope className="text-white" size={23} />
+                                </div>
+                                <div>
+                                    <h3 className="text-white font-bold">Trusted Doctors</h3>
+                                    <p className="text-blue-100 text-sm">Explore healthcare professionals</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-4 bg-white/10 border border-white/15 rounded-2xl p-4">
+                                <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center">
+                                    <ShieldCheck className="text-white" size={23} />
+                                </div>
+                                <div>
+                                    <h3 className="text-white font-bold">Secure Access</h3>
+                                    <p className="text-blue-100 text-sm">Your account stays protected</p>
+                                </div>
+                            </div>
+
+                            <p className="text-blue-100/80 text-sm pt-3">
+                                © 2026 MediY. All rights reserved.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="p-7 sm:p-10 lg:p-14">
+                        <div className="max-w-md mx-auto">
+
+                            <div className="lg:hidden flex justify-center mb-7">
+                                <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
+                                    <HeartPulse size={30} className="text-white" />
+                                </div>
+                            </div>
+
+                            <div className="mb-8">
+                                <div className="inline-flex items-center gap-2 text-blue-600 font-bold text-sm bg-blue-50 px-3 py-2 rounded-full mb-5">
+                                    <Activity size={16} />
+                                    YOUR HEALTHCARE PORTAL
+                                </div>
+
+                                <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900">
+                                    Welcome back!
+                                </h2>
+
+                                <p className="text-slate-500 mt-3 leading-relaxed">
+                                    Login to your account and continue your healthcare journey.
+                                </p>
+                            </div>
+
+                            <div className="mb-7">
+                                <label className="block text-sm font-bold text-slate-700 mb-3">
+                                    Select your account type
+                                </label>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setRole("patient");
+                                            setError("");
+                                        }}
+                                        className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition ${
+                                            role === "patient"
+                                                ? "border-blue-600 bg-blue-50 text-blue-700 shadow-sm"
+                                                : "border-slate-200 bg-white text-slate-500 hover:border-blue-200"
+                                        }`}
+                                    >
+                                        <UserRound size={27} />
+                                        <span className="font-bold text-sm">Patient</span>
+                                        {role === "patient" && (
+                                            <span className="text-xs font-semibold">Selected</span>
+                                        )}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setRole("doctor");
+                                            setError("");
+                                        }}
+                                        className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition ${
+                                            role === "doctor"
+                                                ? "border-blue-600 bg-blue-50 text-blue-700 shadow-sm"
+                                                : "border-slate-200 bg-white text-slate-500 hover:border-blue-200"
+                                        }`}
+                                    >
+                                        <Stethoscope size={27} />
+                                        <span className="font-bold text-sm">Doctor</span>
+                                        {role === "doctor" && (
+                                            <span className="text-xs font-semibold">Selected</span>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {error && (
+                                <div role="alert" className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm font-medium">
+                                    {error}
+                                </div>
+                            )}
+
+                            <form onSubmit={handleLogin} className="space-y-5">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">
+                                        Email Address
+                                    </label>
+                                    <div className="relative">
+                                        <Mail size={19} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                                        <input
+                                            type="email"
+                                            placeholder="Enter your email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            required
+                                            autoComplete="email"
+                                            className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-xl outline-none text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-2">
+                                        Password
+                                    </label>
+                                    <div className="relative">
+                                        <LockKeyhole size={19} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="Enter your password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            required
+                                            autoComplete="current-password"
+                                            className="w-full pl-12 pr-12 py-4 bg-slate-50 border border-slate-200 rounded-xl outline-none text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            aria-label={showPassword ? "Hide password" : "Show password"}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition"
+                                        >
+                                            {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between bg-blue-50 rounded-xl px-4 py-3">
+                                    <span className="text-sm text-slate-600">Logging in as</span>
+                                    <span className="text-sm font-bold text-blue-700">
+                                        {role === "doctor" ? "Doctor" : "Patient"}
+                                    </span>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full flex items-center justify-center gap-3 bg-blue-600 text-white py-4 rounded-xl font-bold text-base shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0 transition"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <span className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                                            Logging in...
+                                        </>
+                                    ) : (
+                                        <>
+                                            Login to Account
+                                            <ArrowRight size={19} />
+                                        </>
+                                    )}
+                                </button>
+                            </form>
+
+                            <div className="text-center mt-8">
+                                <p className="text-sm text-slate-500">
+                                    Don't have an account?{" "}
+                                    <Link to="/register" className="text-blue-600 font-bold hover:text-blue-700">
+                                        Create Account
+                                    </Link>
+                                </p>
+                            </div>
+
+                            <div className="flex items-center justify-center gap-2 mt-7 text-xs text-slate-400">
+                                <ShieldCheck size={15} />
+                                Secure login powered by MediY
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            </main>
 
-                {/* Error */}
-                {error && (
-                    <div style={styles.error}>
-                        {error}
-                    </div>
-                )}
-
-                {/* Login Form */}
-                <form onSubmit={handleLogin}>
-
-                    <div style={styles.inputGroup}>
-                        <label style={styles.label}>
-                            Email Address
-                        </label>
-
-                        <input
-                            type="email"
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            style={styles.input}
-                        />
-                    </div>
-
-                    <div style={styles.inputGroup}>
-                        <label style={styles.label}>
-                            Password
-                        </label>
-
-                        <input
-                            type="password"
-                            placeholder="Enter your password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            style={styles.input}
-                        />
-                    </div>
-
-                    {/* Selected Role */}
-                    <div style={styles.selectedRole}>
-                        Logging in as{" "}
-                        <strong>
-                            {role === "doctor" ? "Doctor" : "Patient"}
-                        </strong>
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        style={{
-                            ...styles.loginButton,
-                            opacity: loading ? 0.7 : 1,
-                        }}
-                    >
-                        {loading ? "Logging in..." : "Login"}
-                    </button>
-
-                </form>
-
-                {/* Register */}
-                <p style={styles.registerText}>
-                    Don't have an account?{" "}
-                    <span
-                        onClick={() => navigate("/register")}
-                        style={styles.registerLink}
-                    >
-                        Register
-                    </span>
-                </p>
-
-                {/* Home */}
-                <button
-                    onClick={() => navigate("/")}
-                    style={styles.homeButton}
-                >
-                    ← Back to Home
-                </button>
-
-            </div>
+            <footer className="text-center py-5 text-sm text-slate-400">
+                © 2026 MediY · Your health, our priority.
+            </footer>
         </div>
     );
 }
-
-const styles = {
-    page: {
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background:
-            "linear-gradient(135deg, #eef7ff 0%, #f7fbff 50%, #e8f5ff 100%)",
-        padding: "20px",
-        fontFamily:
-            "Inter, Arial, Helvetica, sans-serif",
-    },
-
-    card: {
-        width: "100%",
-        maxWidth: "460px",
-        background: "#ffffff",
-        borderRadius: "24px",
-        padding: "40px",
-        boxShadow:
-            "0 20px 60px rgba(30, 80, 120, 0.15)",
-        border: "1px solid #e8eef5",
-    },
-
-    logo: {
-        width: "64px",
-        height: "64px",
-        margin: "0 auto 18px",
-        borderRadius: "18px",
-        background: "#e8f5ff",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: "32px",
-    },
-
-    title: {
-        textAlign: "center",
-        margin: "0",
-        fontSize: "30px",
-        fontWeight: "700",
-        color: "#172b4d",
-    },
-
-    subtitle: {
-        textAlign: "center",
-        color: "#718096",
-        marginTop: "10px",
-        marginBottom: "30px",
-        fontSize: "15px",
-    },
-
-    roleContainer: {
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "12px",
-        marginBottom: "25px",
-    },
-
-    roleButton: {
-        padding: "16px 10px",
-        borderRadius: "14px",
-        border: "1px solid #d9e2ec",
-        background: "#ffffff",
-        cursor: "pointer",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "7px",
-        fontSize: "14px",
-        fontWeight: "600",
-        color: "#52606d",
-        transition: "0.2s",
-    },
-
-    activeRole: {
-        background: "#e8f5ff",
-        border: "2px solid #27a9e1",
-        color: "#1686b8",
-    },
-
-    activeDoctorRole: {
-        background: "#eef1ff",
-        border: "2px solid #647cff",
-        color: "#465bd6",
-    },
-
-    roleIcon: {
-        fontSize: "28px",
-    },
-
-    error: {
-        background: "#fff1f0",
-        color: "#d93025",
-        border: "1px solid #ffd6d2",
-        padding: "12px",
-        borderRadius: "10px",
-        marginBottom: "18px",
-        fontSize: "14px",
-        textAlign: "center",
-    },
-
-    inputGroup: {
-        marginBottom: "20px",
-    },
-
-    label: {
-        display: "block",
-        marginBottom: "8px",
-        fontSize: "14px",
-        fontWeight: "600",
-        color: "#334e68",
-    },
-
-    input: {
-        width: "100%",
-        boxSizing: "border-box",
-        padding: "14px 16px",
-        borderRadius: "12px",
-        border: "1px solid #d9e2ec",
-        outline: "none",
-        fontSize: "15px",
-        color: "#243b53",
-        background: "#fbfdff",
-    },
-
-    selectedRole: {
-        background: "#f5f8fb",
-        borderRadius: "10px",
-        padding: "11px",
-        textAlign: "center",
-        color: "#627d98",
-        fontSize: "14px",
-        marginBottom: "18px",
-    },
-
-    loginButton: {
-        width: "100%",
-        padding: "15px",
-        border: "none",
-        borderRadius: "12px",
-        background:
-            "linear-gradient(135deg, #2499d3, #1677b7)",
-        color: "#ffffff",
-        fontSize: "16px",
-        fontWeight: "700",
-        cursor: "pointer",
-        boxShadow:
-            "0 8px 20px rgba(22, 119, 183, 0.25)",
-    },
-
-    registerText: {
-        textAlign: "center",
-        marginTop: "24px",
-        color: "#718096",
-        fontSize: "14px",
-    },
-
-    registerLink: {
-        color: "#1686b8",
-        fontWeight: "700",
-        cursor: "pointer",
-    },
-
-    homeButton: {
-        display: "block",
-        margin: "15px auto 0",
-        border: "none",
-        background: "transparent",
-        color: "#718096",
-        cursor: "pointer",
-        fontSize: "14px",
-    },
-};
 
 export default Login;

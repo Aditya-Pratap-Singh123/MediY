@@ -1,5 +1,7 @@
+
 const Doctor = require("../models/Doctor");
 const User = require("../models/User");
+const cloudinary = require("../config/cloudinary");
 
 // =====================================
 // CREATE DOCTOR PROFILE
@@ -7,7 +9,6 @@ const User = require("../models/User");
 
 const createDoctorProfile = async (req, res) => {
     try {
-        // Only doctors can create profile
         if (req.user.role !== "doctor") {
             return res.status(403).json({
                 message: "Only doctors can create a doctor profile"
@@ -26,7 +27,6 @@ const createDoctorProfile = async (req, res) => {
             availability
         } = req.body;
 
-        // Required fields
         if (
             !specialization ||
             !qualification ||
@@ -42,7 +42,6 @@ const createDoctorProfile = async (req, res) => {
             });
         }
 
-        // Check existing profile
         const existingDoctor = await Doctor.findOne({
             userId: req.user.id
         });
@@ -53,7 +52,6 @@ const createDoctorProfile = async (req, res) => {
             });
         }
 
-        // Check user exists
         const user = await User.findById(req.user.id);
 
         if (!user) {
@@ -62,7 +60,6 @@ const createDoctorProfile = async (req, res) => {
             });
         }
 
-        // Check registration number already exists
         const existingRegistration = await Doctor.findOne({
             registrationNumber: registrationNumber.trim()
         });
@@ -73,7 +70,6 @@ const createDoctorProfile = async (req, res) => {
             });
         }
 
-        // Create profile
         const doctor = await Doctor.create({
             userId: req.user.id,
             specialization,
@@ -109,7 +105,6 @@ const createDoctorProfile = async (req, res) => {
 
 const getDoctorProfile = async (req, res) => {
     try {
-        // Only doctors
         if (req.user.role !== "doctor") {
             return res.status(403).json({
                 message: "Only doctors can access this profile"
@@ -118,10 +113,7 @@ const getDoctorProfile = async (req, res) => {
 
         const doctor = await Doctor.findOne({
             userId: req.user.id
-        }).populate(
-            "userId",
-            "name email phone"
-        );
+        }).populate("userId", "name email phone");
 
         if (!doctor) {
             return res.status(404).json({
@@ -129,9 +121,7 @@ const getDoctorProfile = async (req, res) => {
             });
         }
 
-        res.status(200).json({
-            doctor
-        });
+        res.status(200).json({ doctor });
 
     } catch (error) {
         console.error("Get Doctor Profile Error:", error);
@@ -150,7 +140,6 @@ const getDoctorProfile = async (req, res) => {
 
 const updateDoctorProfile = async (req, res) => {
     try {
-        // Only doctors
         if (req.user.role !== "doctor") {
             return res.status(403).json({
                 message: "Only doctors can update doctor profile"
@@ -179,29 +168,23 @@ const updateDoctorProfile = async (req, res) => {
             });
         }
 
-        // Update specialization
         if (specialization !== undefined) {
             doctor.specialization = specialization;
         }
 
-        // Update qualification
         if (qualification !== undefined) {
             doctor.qualification = qualification;
         }
 
-        // Update experience
         if (experience !== undefined) {
             doctor.experience = experience;
         }
 
-        // Update fees
         if (fees !== undefined) {
             doctor.fees = fees;
         }
 
-        // Update registration number
         if (registrationNumber !== undefined) {
-
             const existingRegistration = await Doctor.findOne({
                 registrationNumber: registrationNumber.trim(),
                 _id: { $ne: doctor._id }
@@ -216,22 +199,18 @@ const updateDoctorProfile = async (req, res) => {
             doctor.registrationNumber = registrationNumber.trim();
         }
 
-        // Update hospital
         if (hospitalName !== undefined) {
             doctor.hospitalName = hospitalName;
         }
 
-        // Update city
         if (city !== undefined) {
             doctor.city = city;
         }
 
-        // Update about
         if (about !== undefined) {
             doctor.about = about;
         }
 
-        // Update availability
         if (availability !== undefined) {
             doctor.availability = availability;
         }
@@ -255,40 +234,142 @@ const updateDoctorProfile = async (req, res) => {
 
 
 // =====================================
+// UPLOAD DOCTOR PROFILE PHOTO
+// =====================================
+
+const uploadDoctorPhoto = async (req, res) => {
+    try {
+        if (req.user.role !== "doctor") {
+            return res.status(403).json({
+                message: "Only doctors can upload profile photos"
+            });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({
+                message: "Please select an image"
+            });
+        }
+
+        const doctor = await Doctor.findOne({
+            userId: req.user.id
+        });
+
+        if (!doctor) {
+            return res.status(404).json({
+                message: "Doctor profile not found"
+            });
+        }
+
+        const result = await new Promise((resolve, reject) => {
+            cloudinary.uploader.upload_stream(
+                {
+                    folder: "mediy/doctor-profiles",
+                    resource_type: "image"
+                },
+                (error, result) => {
+                    if (error) {
+                        reject(error);
+                    } else {
+                        resolve(result);
+                    }
+                }
+            ).end(req.file.buffer);
+        });
+
+        doctor.profileImage = result.secure_url;
+        await doctor.save();
+
+        res.status(200).json({
+            message: "Profile photo uploaded successfully",
+            profileImage: doctor.profileImage
+        });
+
+    } catch (error) {
+        console.error("Doctor Photo Upload Error:", error);
+
+        res.status(500).json({
+            message: "Unable to upload profile photo"
+        });
+    }
+};
+
+
+// =====================================
 // GET ALL DOCTORS / SEARCH DOCTORS
 // =====================================
 
 const getAllDoctors = async (req, res) => {
     try {
         const {
+            search,
             specialization,
-            city
+            city,
+            maxFees,
+            minExperience,
+            day
         } = req.query;
 
-        let filter = {};
+        const filter = {};
 
-        // Search by specialization
-        if (specialization) {
+        if (specialization?.trim()) {
             filter.specialization = {
-                $regex: specialization,
+                $regex: specialization.trim(),
                 $options: "i"
             };
         }
 
-        // Search by city
-        if (city) {
+        if (city?.trim()) {
             filter.city = {
-                $regex: city,
+                $regex: city.trim(),
                 $options: "i"
             };
         }
 
-        const doctors = await Doctor.find(filter)
-            .populate(
-                "userId",
-                "name email phone"
-            )
+        if (maxFees !== undefined && maxFees !== "") {
+            const fees = Number(maxFees);
+
+            if (!Number.isFinite(fees) || fees < 0) {
+                return res.status(400).json({
+                    message: "Invalid maximum fees"
+                });
+            }
+
+            filter.fees = { $lte: fees };
+        }
+
+        if (minExperience !== undefined && minExperience !== "") {
+            const experience = Number(minExperience);
+
+            if (!Number.isFinite(experience) || experience < 0) {
+                return res.status(400).json({
+                    message: "Invalid minimum experience"
+                });
+            }
+
+            filter.experience = { $gte: experience };
+        }
+
+        if (day?.trim()) {
+            filter["availability.day"] = {
+                $regex: `^${day.trim()}$`,
+                $options: "i"
+            };
+        }
+
+        let doctors = await Doctor.find(filter)
+            .populate("userId", "name email phone")
             .select("-__v");
+
+        if (search?.trim()) {
+            const searchText = search.trim().toLowerCase();
+
+            doctors = doctors.filter((doctor) =>
+                doctor.userId?.name
+                    ?.toLowerCase()
+                    .includes(searchText)
+            );
+        }
 
         res.status(200).json({
             count: doctors.length,
@@ -315,10 +396,7 @@ const getDoctorById = async (req, res) => {
         const { id } = req.params;
 
         const doctor = await Doctor.findById(id)
-            .populate(
-                "userId",
-                "name email phone"
-            )
+            .populate("userId", "name email phone")
             .select("-__v");
 
         if (!doctor) {
@@ -327,9 +405,7 @@ const getDoctorById = async (req, res) => {
             });
         }
 
-        res.status(200).json({
-            doctor
-        });
+        res.status(200).json({ doctor });
 
     } catch (error) {
         console.error("Get Doctor By ID Error:", error);
@@ -350,6 +426,7 @@ module.exports = {
     createDoctorProfile,
     getDoctorProfile,
     updateDoctorProfile,
+    uploadDoctorPhoto,
     getAllDoctors,
     getDoctorById
 };

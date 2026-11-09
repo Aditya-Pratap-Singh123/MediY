@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const appointmentSchema = new mongoose.Schema(
@@ -40,6 +41,23 @@ const appointmentSchema = new mongoose.Schema(
                 "completed"
             ],
             default: "pending"
+        },
+
+        // Patient's reschedule request
+        rescheduleRequest: {
+            date: {
+                type: String
+            },
+            time: {
+                type: String
+            },
+            status: {
+                type: String,
+                enum: ["pending", "approved", "rejected"]
+            },
+            requestedAt: {
+                type: Date
+            }
         }
     },
     {

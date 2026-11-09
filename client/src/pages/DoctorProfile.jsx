@@ -1,501 +1,356 @@
+
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import {
     HeartPulse,
     Stethoscope,
+    MapPin,
+    GraduationCap,
+    BriefcaseMedical,
+    IndianRupee,
     CalendarDays,
-    Clock3,
+    Clock,
+    Phone,
+    Mail,
     ArrowLeft,
-    CheckCircle2
+    AlertCircle,
+    UserRound
 } from "lucide-react";
 
 function DoctorProfile() {
     const { doctorId } = useParams();
-    const navigate = useNavigate();
 
     const [doctor, setDoctor] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-
-    const [formData, setFormData] = useState({
-        date: "",
-        time: "",
-        reason: ""
-    });
-
-    const [booking, setBooking] = useState(false);
-
-    const token = localStorage.getItem("token");
-
-    // =====================================
-    // FETCH DOCTOR
-    // =====================================
+    const [imageError, setImageError] = useState(false);
 
     useEffect(() => {
-        fetchDoctor();
-    }, [doctorId]);
+        const fetchDoctor = async () => {
+            try {
+                setLoading(true);
+                setError("");
 
-    const fetchDoctor = async () => {
-        try {
-            const response = await fetch(
-                `http://localhost:5000/api/doctors/${doctorId}`
-            );
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(
-                    data.message || "Failed to fetch doctor"
+                const response = await fetch(
+                    `http://localhost:5000/api/doctors/${doctorId}`
                 );
-            }
 
-            setDoctor(data.doctor);
+                const data = await response.json();
 
-        } catch (error) {
-            console.error("Fetch Doctor Error:", error);
-            setError(error.message);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // =====================================
-    // HANDLE INPUT
-    // =====================================
-
-    const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-    };
-
-    // =====================================
-    // BOOK APPOINTMENT
-    // =====================================
-
-    const handleBooking = async (e) => {
-        e.preventDefault();
-
-        if (!token) {
-            alert("Please login as a patient first.");
-            navigate("/login");
-            return;
-        }
-
-        setBooking(true);
-        setError("");
-
-        try {
-            const response = await fetch(
-                "http://localhost:5000/api/appointments/book",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        doctorId,
-                        date: formData.date,
-                        time: formData.time,
-                        reason: formData.reason
-                    })
+                if (!response.ok) {
+                    throw new Error(data.message || "Failed to load doctor profile");
                 }
-            );
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(
-                    data.message || "Failed to book appointment"
-                );
+                setDoctor(data.doctor);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
             }
+        };
 
-            alert("Appointment booked successfully!");
-
-            navigate("/patient/dashboard");
-
-        } catch (error) {
-            console.error("Book Appointment Error:", error);
-            setError(error.message);
-        } finally {
-            setBooking(false);
+        if (doctorId) {
+            fetchDoctor();
         }
-    };
-
-    // =====================================
-    // LOADING
-    // =====================================
+    }, [doctorId]);
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-sky-50/40 flex items-center justify-center">
-                <p className="text-slate-500">
+            <div className="min-h-screen flex items-center justify-center bg-sky-50">
+                <p className="text-blue-600 font-medium text-lg">
                     Loading doctor profile...
                 </p>
             </div>
         );
     }
 
-    // =====================================
-    // DOCTOR NOT FOUND
-    // =====================================
-
-    if (error && !doctor) {
+    if (error || !doctor) {
         return (
-            <div className="min-h-screen bg-sky-50/40 flex items-center justify-center px-6">
+            <div className="min-h-screen flex flex-col items-center justify-center bg-sky-50 px-5">
+                <AlertCircle size={45} className="text-red-500 mb-4" />
 
-                <div className="bg-white p-8 rounded-2xl border border-red-100 text-center">
+                <h2 className="text-2xl font-bold text-slate-800">
+                    Doctor Profile Not Found
+                </h2>
 
-                    <p className="text-red-600 mb-5">
-                        {error}
-                    </p>
+                <p className="text-slate-500 mt-2">
+                    {error || "Doctor details are unavailable."}
+                </p>
 
-                    <Link
-                        to="/doctors"
-                        className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-3 rounded-xl hover:bg-blue-700"
-                    >
-                        <ArrowLeft size={18} />
-                        Back to Doctors
-                    </Link>
-
-                </div>
-
+                <Link
+                    to="/doctors"
+                    className="mt-6 bg-blue-600 text-white px-6 py-3 rounded-xl"
+                >
+                    Back to Doctors
+                </Link>
             </div>
         );
     }
 
-    // =====================================
-    // DOCTOR NAME
-    // =====================================
-
-    const doctorName =
-        doctor?.userId?.name ||
-        doctor?.name ||
-        "Doctor";
-
-    // =====================================
-    // UI
-    // =====================================
+    const doctorName = doctor.userId?.name || "Doctor";
 
     return (
-        <div className="min-h-screen bg-sky-50/40">
+        <div className="min-h-screen bg-sky-50/60">
 
-            {/* ================= NAVBAR ================= */}
-
-            <nav className="bg-blue-50 border-b border-blue-100">
-
+            {/* Navbar */}
+            <nav className="bg-white border-b border-blue-100">
                 <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
 
-                    <Link
-                        to="/"
-                        className="flex items-center gap-2"
-                    >
-
+                    <Link to="/" className="flex items-center gap-2">
                         <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center">
-
-                            <HeartPulse
-                                size={23}
-                                className="text-white"
-                            />
-
+                            <HeartPulse size={23} className="text-white" />
                         </div>
 
                         <span className="text-2xl font-bold text-slate-800">
-                            Medi
-                            <span className="text-blue-600">
-                                Y
-                            </span>
+                            Medi<span className="text-blue-600">Y</span>
                         </span>
-
                     </Link>
 
                     <Link
                         to="/doctors"
-                        className="flex items-center gap-2 text-slate-600 hover:text-blue-600"
+                        className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
                     >
                         <ArrowLeft size={18} />
-                        Back to Doctors
+                        All Doctors
                     </Link>
-
                 </div>
-
             </nav>
 
+            <main className="max-w-6xl mx-auto px-5 py-10">
 
-            {/* ================= MAIN ================= */}
-
-            <main className="max-w-6xl mx-auto px-6 py-10">
-
-                {/* ================= DOCTOR PROFILE ================= */}
-
+                {/* Doctor Header */}
                 <div className="bg-white rounded-3xl border border-blue-100 shadow-sm overflow-hidden">
 
-                    {/* HEADER */}
+                    <div className="bg-gradient-to-r from-blue-700 to-sky-500 h-36" />
 
-                    <div className="bg-blue-50 p-8 md:p-10">
+                    <div className="px-6 md:px-10 pb-8">
 
-                        <div className="flex flex-col md:flex-row items-start gap-6">
+                        <div className="flex flex-col md:flex-row md:items-end gap-5 -mt-14">
 
-                            <div className="w-24 h-24 rounded-2xl bg-white border border-blue-100 flex items-center justify-center">
+                            {/* DOCTOR PROFILE PHOTO */}
+                            <div className="w-28 h-28 rounded-3xl bg-white border-4 border-white shadow-md overflow-hidden flex items-center justify-center shrink-0">
 
-                                <Stethoscope
-                                    size={42}
-                                    className="text-blue-600"
-                                />
+                                {doctor.profileImage && !imageError ? (
+                                    <img
+                                        src={doctor.profileImage}
+                                        alt={doctorName}
+                                        className="w-full h-full object-cover"
+                                        onError={() => setImageError(true)}
+                                    />
+                                ) : (
+                                    <UserRound
+                                        size={55}
+                                        className="text-blue-600"
+                                    />
+                                )}
 
                             </div>
 
-                            <div>
+                            <div className="flex-1 pt-2 md:pt-0">
 
-                                <p className="text-blue-600 font-medium">
-                                    Doctor Profile
-                                </p>
-
-                                <h1 className="text-3xl font-bold text-slate-800 mt-1">
+                                <h1 className="text-3xl font-bold text-slate-800">
                                     Dr. {doctorName}
                                 </h1>
 
-                                <p className="text-lg text-blue-600 mt-1">
-                                    {doctor?.specialization ||
-                                        "Medical Specialist"}
+                                <p className="text-blue-600 font-semibold mt-1">
+                                    {doctor.specialization}
                                 </p>
 
                             </div>
+
+                            <Link
+                                to={`/book/${doctor._id}`}
+                                className="flex items-center justify-center gap-2 bg-blue-600 text-white px-7 py-3 rounded-xl font-semibold hover:bg-blue-700 transition"
+                            >
+                                <CalendarDays size={19} />
+                                Book Appointment
+                            </Link>
 
                         </div>
-
                     </div>
-
-
-                    {/* DETAILS */}
-
-                    <div className="p-8 md:p-10">
-
-                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-
-                            {/* SPECIALIZATION */}
-
-                            <div className="p-5 bg-slate-50 rounded-2xl">
-
-                                <Stethoscope
-                                    size={22}
-                                    className="text-blue-600"
-                                />
-
-                                <p className="text-sm text-slate-400 mt-3">
-                                    Specialization
-                                </p>
-
-                                <p className="font-semibold text-slate-700 mt-1">
-                                    {doctor?.specialization ||
-                                        "Not specified"}
-                                </p>
-
-                            </div>
-
-
-                            {/* EXPERIENCE */}
-
-                            <div className="p-5 bg-slate-50 rounded-2xl">
-
-                                <Clock3
-                                    size={22}
-                                    className="text-blue-600"
-                                />
-
-                                <p className="text-sm text-slate-400 mt-3">
-                                    Experience
-                                </p>
-
-                                <p className="font-semibold text-slate-700 mt-1">
-
-                                    {doctor?.experience
-                                        ? `${doctor.experience} years`
-                                        : "Not specified"}
-
-                                </p>
-
-                            </div>
-
-
-                            {/* AVAILABILITY */}
-
-                            <div className="p-5 bg-slate-50 rounded-2xl">
-
-                                <CheckCircle2
-                                    size={22}
-                                    className="text-green-600"
-                                />
-
-                                <p className="text-sm text-slate-400 mt-3">
-                                    Availability
-                                </p>
-
-                                <p className="font-semibold text-green-600 mt-1">
-                                    Available for appointments
-                                </p>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
                 </div>
 
+                {/* Details */}
+                <div className="grid lg:grid-cols-3 gap-6 mt-7">
 
-                {/* ================= BOOK APPOINTMENT ================= */}
+                    <div className="lg:col-span-2 space-y-6">
 
-                <div className="mt-8 bg-white rounded-3xl border border-blue-100 shadow-sm p-8 md:p-10">
+                        {/* About */}
+                        <section className="bg-white p-7 rounded-2xl border border-blue-100 shadow-sm">
 
-                    {/* TITLE */}
+                            <h2 className="text-xl font-bold text-slate-800 mb-4">
+                                About Doctor
+                            </h2>
 
-                    <div className="mb-7">
+                            <p className="text-slate-600 leading-7">
+                                {doctor.about || "No information has been added yet."}
+                            </p>
 
-                        <p className="text-blue-600 font-medium">
-                            BOOK APPOINTMENT
-                        </p>
+                        </section>
 
-                        <h2 className="text-2xl font-bold text-slate-800 mt-1">
-                            Schedule your appointment
-                        </h2>
+                        {/* Professional Information */}
+                        <section className="bg-white p-7 rounded-2xl border border-blue-100 shadow-sm">
 
-                        <p className="text-slate-500 mt-2">
-                            Select a date and time that works for you.
-                        </p>
+                            <h2 className="text-xl font-bold text-slate-800 mb-6">
+                                Professional Information
+                            </h2>
 
+                            <div className="grid sm:grid-cols-2 gap-6">
+
+                                <div className="flex gap-3">
+                                    <GraduationCap className="text-blue-600 shrink-0" size={24} />
+                                    <div>
+                                        <p className="text-sm text-slate-500">Qualification</p>
+                                        <p className="font-semibold text-slate-800">
+                                            {doctor.qualification}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <BriefcaseMedical className="text-blue-600 shrink-0" size={24} />
+                                    <div>
+                                        <p className="text-sm text-slate-500">Experience</p>
+                                        <p className="font-semibold text-slate-800">
+                                            {doctor.experience} years
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <IndianRupee className="text-blue-600 shrink-0" size={24} />
+                                    <div>
+                                        <p className="text-sm text-slate-500">Consultation Fees</p>
+                                        <p className="font-semibold text-slate-800">
+                                            ₹{doctor.fees}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3">
+                                    <Stethoscope className="text-blue-600 shrink-0" size={24} />
+                                    <div>
+                                        <p className="text-sm text-slate-500">Registration Number</p>
+                                        <p className="font-semibold text-slate-800">
+                                            {doctor.registrationNumber}
+                                        </p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </section>
+
+                        {/* Availability */}
+                        <section className="bg-white p-7 rounded-2xl border border-blue-100 shadow-sm">
+
+                            <h2 className="text-xl font-bold text-slate-800 mb-5">
+                                Weekly Availability
+                            </h2>
+
+                            {doctor.availability?.length > 0 ? (
+                                <div className="space-y-3">
+
+                                    {doctor.availability.map((item, index) => (
+                                        <div
+                                            key={index}
+                                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-sky-50 p-4 rounded-xl"
+                                        >
+
+                                            <div className="flex items-center gap-3">
+                                                <CalendarDays size={19} className="text-blue-600" />
+                                                <span className="font-semibold text-slate-700">
+                                                    {item.day}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex items-center gap-2 text-sm text-slate-600">
+                                                <Clock size={17} className="text-blue-600" />
+                                                {item.startTime} - {item.endTime}
+                                            </div>
+
+                                        </div>
+                                    ))}
+
+                                </div>
+                            ) : (
+                                <p className="text-slate-500">
+                                    Availability has not been added yet.
+                                </p>
+                            )}
+
+                        </section>
                     </div>
 
+                    {/* Clinic and Contact */}
+                    <aside className="space-y-6">
 
-                    {/* ERROR */}
+                        <section className="bg-white p-7 rounded-2xl border border-blue-100 shadow-sm">
 
-                    {error && (
+                            <h2 className="text-xl font-bold text-slate-800 mb-6">
+                                Clinic Information
+                            </h2>
 
-                        <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-600">
-                            {error}
-                        </div>
-
-                    )}
-
-
-                    {/* FORM */}
-
-                    <form
-                        onSubmit={handleBooking}
-                        className="space-y-6"
-                    >
-
-                        {/* DATE + TIME */}
-
-                        <div className="grid md:grid-cols-2 gap-5">
-
-                            {/* DATE */}
-
-                            <div>
-
-                                <label className="block text-sm font-medium text-slate-700 mb-2">
-                                    Appointment Date
-                                </label>
-
-                                <div className="relative">
-
-                                    <CalendarDays
-                                        size={19}
-                                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                                    />
-
-                                    <input
-                                        type="date"
-                                        name="date"
-                                        value={formData.date}
-                                        onChange={handleChange}
-                                        min={
-                                            new Date()
-                                                .toISOString()
-                                                .split("T")[0]
-                                        }
-                                        required
-                                        className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                                    />
-
+                            <div className="flex gap-3 mb-6">
+                                <Stethoscope size={22} className="text-blue-600 shrink-0" />
+                                <div>
+                                    <p className="text-sm text-slate-500">Hospital / Clinic</p>
+                                    <p className="font-semibold text-slate-800">
+                                        {doctor.hospitalName}
+                                    </p>
                                 </div>
-
                             </div>
 
-
-                            {/* TIME */}
-
-                            <div>
-
-                                <label className="block text-sm font-medium text-slate-700 mb-2">
-                                    Appointment Time
-                                </label>
-
-                                <div className="relative">
-
-                                    <Clock3
-                                        size={19}
-                                        className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                                    />
-
-                                    <input
-                                        type="time"
-                                        name="time"
-                                        value={formData.time}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                                    />
-
+                            <div className="flex gap-3">
+                                <MapPin size={22} className="text-blue-600 shrink-0" />
+                                <div>
+                                    <p className="text-sm text-slate-500">City</p>
+                                    <p className="font-semibold text-slate-800">
+                                        {doctor.city}
+                                    </p>
                                 </div>
-
                             </div>
 
-                        </div>
+                        </section>
 
+                        <section className="bg-white p-7 rounded-2xl border border-blue-100 shadow-sm">
 
-                        {/* REASON */}
+                            <h2 className="text-xl font-bold text-slate-800 mb-6">
+                                Contact Information
+                            </h2>
 
-                        <div>
+                            <div className="flex gap-3 mb-5">
+                                <Mail size={20} className="text-blue-600 shrink-0" />
+                                <div className="min-w-0">
+                                    <p className="text-sm text-slate-500">Email</p>
+                                    <p className="font-medium text-slate-800 break-all">
+                                        {doctor.userId?.email || "Not available"}
+                                    </p>
+                                </div>
+                            </div>
 
-                            <label className="block text-sm font-medium text-slate-700 mb-2">
-                                Reason for Visit
-                            </label>
+                            <div className="flex gap-3">
+                                <Phone size={20} className="text-blue-600 shrink-0" />
+                                <div>
+                                    <p className="text-sm text-slate-500">Phone</p>
+                                    <p className="font-medium text-slate-800">
+                                        {doctor.userId?.phone || "Not available"}
+                                    </p>
+                                </div>
+                            </div>
 
-                            <textarea
-                                name="reason"
-                                value={formData.reason}
-                                onChange={handleChange}
-                                rows="4"
-                                placeholder="Briefly describe why you want to consult the doctor..."
-                                className="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none resize-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                            />
+                        </section>
 
-                        </div>
-
-
-                        {/* BUTTON */}
-
-                        <button
-                            type="submit"
-                            disabled={booking}
-                            className="w-full md:w-auto bg-blue-600 text-white px-8 py-3.5 rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-60"
+                        <Link
+                            to={`/book/${doctor._id}`}
+                            className="flex items-center justify-center gap-2 w-full bg-blue-600 text-white p-4 rounded-xl font-semibold hover:bg-blue-700 transition"
                         >
+                            <CalendarDays size={19} />
+                            Book Appointment Now
+                        </Link>
 
-                            {booking
-                                ? "Booking Appointment..."
-                                : "Book Appointment"}
-
-                        </button>
-
-                    </form>
-
+                    </aside>
                 </div>
-
             </main>
-
         </div>
     );
 }

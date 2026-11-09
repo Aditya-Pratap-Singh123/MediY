@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const doctorSchema = new mongoose.Schema(
@@ -9,14 +10,20 @@ const doctorSchema = new mongoose.Schema(
             unique: true
         },
 
-        // Doctor kis field ka hai
+        // Doctor profile photo
+        profileImage: {
+            type: String,
+            default: ""
+        },
+
+        // Doctor specialization
         specialization: {
             type: String,
             required: true,
             trim: true
         },
 
-        // Doctor ki qualification
+        // Doctor qualification
         qualification: {
             type: String,
             required: true,
