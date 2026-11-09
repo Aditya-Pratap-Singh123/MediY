@@ -24,7 +24,7 @@ function Doctors() {
     const fetchDoctors = async () => {
         try {
             const response = await fetch(
-                "- https://mediy.onrender.com/api/doctors"
+                "https://mediy.onrender.com/api/doctors"
             );
 
             const data = await response.json();

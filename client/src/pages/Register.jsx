@@ -26,7 +26,7 @@ import {
     CheckCircle2
 } from "lucide-react";
 
-const API_BASE_URL = "- https://mediy.onrender.com";
+const API_BASE_URL = "https://mediy.onrender.com";
 
 const initialFormData = {
     name: "",
