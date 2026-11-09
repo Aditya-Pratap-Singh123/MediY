@@ -23,7 +23,7 @@ const corsOptions = {
     optionsSuccessStatus: 204
 };
 
-// CORS must be before routes
+// Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
 
