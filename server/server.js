@@ -1,3 +1,4 @@
+
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
@@ -11,8 +12,19 @@ const reviewRoutes = require("./routes/reviewRoutes");
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// CORS configuration
+const corsOptions = {
+    origin: [
+        "https://mediy.vercel.app",
+        "http://localhost:5173"
+    ],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    optionsSuccessStatus: 204
+};
+
+// CORS must be before routes
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Routes
@@ -28,7 +40,14 @@ app.get("/", (req, res) => {
     });
 });
 
-// Start server after database connection
+// Handle unknown API routes
+app.use("/api", (req, res) => {
+    res.status(404).json({
+        message: "API route not found"
+    });
+});
+
+// Start server
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
