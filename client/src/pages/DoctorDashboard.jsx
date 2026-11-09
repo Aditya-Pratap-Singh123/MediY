@@ -10,7 +10,7 @@ import {
     ChevronRight, Bell, ShieldCheck, ArrowUpRight
 } from "lucide-react";
 
-const API = "https://mediy.onrender.com";
+const API = "https://mediy-1.onrender.com";
 
 function DoctorDashboard() {
     const navigate = useNavigate();

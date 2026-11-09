@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 
-const API_BASE_URL = "https://mediy.onrender.com";
+const API_BASE_URL = "https://mediy-1.onrender.com";
 
 function BookAppointment() {
     const { doctorId } = useParams();
