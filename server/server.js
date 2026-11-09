@@ -14,10 +14,11 @@ const app = express();
 
 // CORS configuration
 const corsOptions = {
-    origin: [
-        "https://mediy.vercel.app",
-        "http://localhost:5173"
-    ],
+   origin: [
+    "https://mediy.vercel.app",
+    "https://mediy-8p8tuugjm-yash-1816.vercel.app",
+    "http://localhost:5173"
+],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     optionsSuccessStatus: 204
