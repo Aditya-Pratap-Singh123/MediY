@@ -9,7 +9,7 @@ import {
     ChevronRight, Plus, CalendarClock
 } from "lucide-react";
 
-const API = "http://localhost:5000/api";
+const API = "- https://mediy.onrender.com/api";
 
 function PatientDashboard() {
     const navigate = useNavigate();

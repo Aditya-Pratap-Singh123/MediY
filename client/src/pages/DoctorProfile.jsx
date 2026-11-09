@@ -32,7 +32,7 @@ function DoctorProfile() {
                 setError("");
 
                 const response = await fetch(
-                    `http://localhost:5000/api/doctors/${doctorId}`
+                    `- https://mediy.onrender.com/api/doctors/${doctorId}`
                 );
 
                 const data = await response.json();
