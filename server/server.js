@@ -1,4 +1,3 @@
-
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
@@ -29,12 +28,20 @@ app.get("/", (req, res) => {
     });
 });
 
-// Connect MongoDB
-connectDB();
-
-// Start server
+// Start server after database connection
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-    console.log(`MediY server running on port ${PORT}`);
-});
+const startServer = async () => {
+    try {
+        await connectDB();
+
+        app.listen(PORT, () => {
+            console.log(`MediY server running on port ${PORT}`);
+        });
+    } catch (error) {
+        console.error("Server startup failed:", error.message);
+        process.exit(1);
+    }
+};
+
+startServer();
